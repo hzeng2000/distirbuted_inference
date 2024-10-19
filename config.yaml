@@ -4,5 +4,6 @@ img_dir: "/home/dataset/imageNet/val/images"
 gt_file: "../class_and_ground_truth/val.txt"
 cls_file: "../class_and_ground_truth/imagenet_classes.txt"
 # Sample_num: 128 from imageNet dataset
-split: 10000
+split: 4096
+batch_size: 256
 warmup_iter : 128

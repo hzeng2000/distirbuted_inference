@@ -86,8 +86,10 @@ def main():
                         help="File containing the ground truth labels.")
     parser.add_argument("--cls_file", type=str, default="/home/dataset/imageNet/imagenet_classes.txt",
                         help="path to imagenet_classes.txt.")
-    parser.add_argument("--split", type=int, default=128,
+    parser.add_argument("--split", type=int, default=1024,
                         help="Split size for processing.")
+    parser.add_argument("--batch_size", type=int, default=128,
+                        help="batch_size.")
     parser.add_argument("--warmup_iter", type=int, default=128,
                         help="Split size for processing.")
 
@@ -118,13 +120,11 @@ def main():
 
     # create dataset and dataloader
     imagenet_val_dataset = ImageNetDataset(img_dir, gt_file, transform=transform, split=args.split)
-    val_loader = DataLoader(imagenet_val_dataset, batch_size=32, shuffle=False, num_workers=4)
+    val_loader = DataLoader(imagenet_val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
     model = models.resnet50(pretrained=True).to(device)
     model.eval()
 
     evaluate_model(model, val_loader, device, args, class_names)
 
 if __name__ == "__main__":
-    world_size = torch.cuda.device_count()
-    print(f"Starting ddp in {world_size} devices")
     main()
