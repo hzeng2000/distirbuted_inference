@@ -10,6 +10,8 @@ import yaml
 import torch.multiprocessing as mp
 import torch.distributed as dist
 import torch.nn as nn
+import shutil
+import torch.profiler
 
 # dataset
 class ImageNetDataset(Dataset):
@@ -58,26 +60,43 @@ def evaluate_model(model, dataloader, device, args, class_names):
             if image_count >= args.warmup_iter:
                 break
     start_time = time.time()
-    with torch.no_grad():
-        for images, labels in dataloader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            _, predicted = torch.max(outputs, 1)
-            # log for debug use
-            # for i in range(len(predicted)):
-            #     predicted_class = class_names[predicted[i].item()]
-            #     actual_class = class_names[labels[i].item()]
-            #     print(f"Image {i+1}: Predicted class = {predicted_class}, Ground truth class = {actual_class}")
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+    trace_dir = "log/"
+    if os.path.exists(trace_dir):
+        shutil.rmtree(trace_dir)
+    os.makedirs(trace_dir, exist_ok=True)
+    with torch.profiler.profile(
+        activities=[
+            torch.profiler.ProfilerActivity.CPU,
+            torch.profiler.ProfilerActivity.CUDA
+        ],
+        # schedule=torch.profiler.schedule(),
+        on_trace_ready=torch.profiler.tensorboard_trace_handler(trace_dir),
+        record_shapes=True,
+        # with_stack=True,
+        profile_memory=True,
+        # with_modules=True,
+    ) as prof:
+        with torch.no_grad():
+            for images, labels in dataloader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs, 1)
+                # log for debug use
+                # for i in range(len(predicted)):
+                #     predicted_class = class_names[predicted[i].item()]
+                #     actual_class = class_names[labels[i].item()]
+                #     print(f"Image {i+1}: Predicted class = {predicted_class}, Ground truth class = {actual_class}")
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
 
-    end_time = time.time()
-    total_correct = torch.tensor(correct).to(device)
-    total_samples = torch.tensor(total).to(device)
-    total_time = torch.tensor(end_time - start_time).to(device)
-    dist.all_reduce(total_correct, op=dist.ReduceOp.SUM)
-    dist.all_reduce(total_samples, op=dist.ReduceOp.SUM)
-    dist.all_reduce(total_time, op=dist.ReduceOp.MAX)
+        end_time = time.time()
+        total_correct = torch.tensor(correct).to(device)
+        total_samples = torch.tensor(total).to(device)
+        total_time = torch.tensor(end_time - start_time).to(device)
+        dist.all_reduce(total_correct, op=dist.ReduceOp.SUM)
+        dist.all_reduce(total_samples, op=dist.ReduceOp.SUM)
+        dist.all_reduce(total_time, op=dist.ReduceOp.MAX)
+        prof.step()
 
     if device == 0:
         total_accuracy = total_correct.item() / total_samples.item()

@@ -8,6 +8,8 @@ import time
 import argparse
 import yaml
 import ray
+import shutil
+import torch.profiler
 
 # 初始化 Ray
 ray.init(address='auto')  # 自动连接到Ray集群
@@ -49,13 +51,30 @@ def evaluate_model(model, dataloader, device, class_names):
     correct = 0
     total = 0
     start_time = time.time()
-    with torch.no_grad():
-        for images, labels in dataloader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+    trace_dir = "log/"
+    if os.path.exists(trace_dir):
+        shutil.rmtree(trace_dir)
+    os.makedirs(trace_dir, exist_ok=True)
+    with torch.profiler.profile(
+        activities=[
+            torch.profiler.ProfilerActivity.CPU,
+            torch.profiler.ProfilerActivity.CUDA
+        ],
+        # schedule=torch.profiler.schedule(),
+        on_trace_ready=torch.profiler.tensorboard_trace_handler(trace_dir),
+        record_shapes=True,
+        # with_stack=True,
+        profile_memory=True,
+        # with_modules=True,
+    ) as prof:
+        with torch.no_grad():
+            for images, labels in dataloader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+        prof.step()
 
     end_time = time.time()
     total_accuracy = correct / total
