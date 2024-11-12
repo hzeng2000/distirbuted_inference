@@ -1,0 +1,30 @@
+# model: "${HOME}/AIPerf-Inference_Models/Llama-2-7b-hf"
+# model: "/home/dataset/llama-2-hf-all/Llama-2-7b-hf"
+model: "/home/dataset/opt-125m"
+# tensor parallel size, match the number of gpus
+tensor_parallel_size: 1
+num_prompts: 128
+# dataset_path: "${HOME}/AIPerf-Inference_Datasets/OpenOrca/1M-GPT4-Augmented.parquet"
+dataset_path: "/home/dataset/OpenOrca/1M-GPT4-Augmented.parquet"
+# Number of prompts to warmup
+warmup_iter : 10
+seed: 0
+# the fraction of GPU memory to be used for 
+# the model executor, which can range from 0 to 1.
+# If unspecified, will use the default value of 0.9.
+gpu_memory_utilization : 0.9
+# Maximum number of forward steps per scheduler call
+num_scheduler_steps : 1
+# Data type for kv cache storage. If "auto", will use model
+# data type. CUDA 11.8+ supports fp8 (=fp8_e4m3) and fp8_e5m2.
+# ROCm (AMD GPU) supports fp8 (=fp8_e4m3)
+kv_cache_dtype : "auto"
+# Device type for vLLM execution, supporting CUDA, OpenVINO and CPU.
+device : "auto"
+
+# Backend to use for distributed system. 
+# When more than 1 GPU is used, the backend will be automatically set to "ray" if installed or "mp" (multiprocessing) otherwise.
+#distributed_executor_backend : 
+
+# Disable async output processor for vLLM backend
+disable_async_output_proc : true

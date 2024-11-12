@@ -22,3 +22,5 @@ rad.json
 TestResults.xml
 # trace file
 */log/
+*.txt
+*.pyc

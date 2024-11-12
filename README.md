@@ -1,6 +1,28 @@
 # distirbuted_inference
 learning about distributed inference, prepare to take resnet50 as a case to get to know how to use distributed inference, including one node muti card and muti node
 
+# prerequisites
+## basic use of ray
+```bash
+# start head node
+ray start --head
+# you will get a message like this
+Next steps
+  To add another node to this Ray cluster, run
+    ray start --address='172.23.18.3:6379'
+
+  To connect to this Ray cluster:
+    import ray
+    ray.init()
+
+  To terminate the Ray runtime, run
+    ray stop
+
+  To view the status of the cluster, use
+    ray status
+# nothing else to say, just continue as above
+```
+
 ## prepare model and dataset
 1. download resnet50 from torchvision
 ```bash
