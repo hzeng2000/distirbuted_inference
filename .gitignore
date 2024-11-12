@@ -22,5 +22,5 @@ rad.json
 TestResults.xml
 # trace file
 */log/
-*.txt
+dis_tho_elapsed.txt
 *.pyc

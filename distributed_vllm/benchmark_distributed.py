@@ -238,8 +238,8 @@ def run_vllm(
     # extract outputs
     elapsed_times = all_outputs["elapsed_time"]
     tho_elapsed = max(elapsed_times)
-    with open("dis_tho_elapsed.txt", "a") as file:
-        file.write(f"dis_tho_elapsed: {tho_elapsed}\n")
+    # with open("dis_tho_elapsed.txt", "a") as file:
+    #     file.write(f"dis_tho_elapsed: {tho_elapsed}\n")
             
     prompts = all_outputs["prompts"]
     generated_texts = all_outputs["generated_text"].to_list()
@@ -330,8 +330,8 @@ def main(args: argparse.Namespace):
                            for _, prompt_len, output_len, _ in requests)
     total_num_tokens = sum(prompt_len + output_len
                            for _, prompt_len, output_len, _ in requests)
-    with open("dis_total_num_tokens.txt", "a") as file:
-        file.write(f"dis_total_num_tokens: {total_num_tokens}\n")
+    # with open("dis_total_num_tokens.txt", "a") as file:
+    #     file.write(f"dis_total_num_tokens: {total_num_tokens}\n")
 
     print(f"Throughput: {len(requests) / tho_elapsed:.2f} requests/s "
         f"({total_num_tokens / tho_elapsed:.2f} tokens/s) | "
